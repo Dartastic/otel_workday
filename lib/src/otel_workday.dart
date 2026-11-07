@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_workday_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_workday';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class WorkdayResult {
+  /// Creates a result.
   const WorkdayResult({
     this.total,
     this.itemCount,
@@ -55,8 +56,13 @@ class WorkdayResult {
   final int? statusCode;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class WorkdayCallResult<T> {
+  /// Creates a call result.
   const WorkdayCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final WorkdayResult? result;
 }
@@ -88,53 +94,53 @@ Future<T> tracedWorkday<T>({
   final span = _tracer().startSpan(
     'workday $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
     if (r.result != null) {
       final extras = <Attribute<Object>>[];
       if (r.result!.total != null) {
-        extras.add(OTel.attributeInt('workday.total', r.result!.total!));
+        extras.add(OTelAPI.attributeInt('workday.total', r.result!.total!));
       }
       if (r.result!.itemCount != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'workday.item_count',
           r.result!.itemCount!,
         ));
       }
       if (r.result!.tenant != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'workday.tenant',
           r.result!.tenant!,
         ));
       }
       if (r.result!.protocol != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'workday.protocol',
           r.result!.protocol!,
         ));
       }
       if (r.result!.reportName != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'workday.raas.report',
           r.result!.reportName!,
         ));
       }
       if (r.result!.reportFormat != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'workday.raas.format',
           r.result!.reportFormat!,
         ));
       }
       if (r.result!.workerType != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'workday.worker.type',
           r.result!.workerType!,
         ));
       }
       if (r.result!.businessProcessStatus != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'workday.business_process.status',
           r.result!.businessProcessStatus!,
         ));
@@ -147,13 +153,13 @@ Future<T> tracedWorkday<T>({
         }
       }
       if (r.result!.requestId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'workday.request.id',
           r.result!.requestId!,
         ));
       }
       if (r.result!.statusCode != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'http.response.status_code',
           r.result!.statusCode!,
         ));
@@ -164,13 +170,13 @@ Future<T> tracedWorkday<T>({
           );
         }
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
-    span.addAttributes(OTel.attributes([
-      OTel.attributeString(
-        ErrorResource.errorType.key,
+    span.addAttributes(OTelAPI.attributes([
+      OTelAPI.attributeString(
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
